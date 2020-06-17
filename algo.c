@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "algo.h"
 
 /************************************
@@ -152,6 +153,15 @@ free:
  * QUEUE IMPLEMENTATION
  *************************************/
 
+queue init_queue() {
+    queue q;
+    q.pstart = NULL;
+    q.pend = NULL;
+    q.cnt= 0;
+
+    return q;
+}
+
 /**
  * Creates a new qlink
  */
@@ -163,50 +173,50 @@ qlink *create_qlink(void *pitem) {
     pqlink->pnext = NULL;
 
     return pqlink;
-
 }
 
 /**
  * Appends a qlink at the end of the queue
  */
-void queue_push(qlink **apqlink, void *pitem) {
+void queue_pushi(queue *pqueue, void *pitem) {
     qlink *pqlink, *pnewqlink;     
 
-    // In case the queue is empty, add the first link
-    if (*apqlink == NULL) {
-        *apqlink = create_qlink(pitem);
-        return;
-    }
+    // Create a new qlink
+    pnewqlink = create_qlink(pitem);
 
-    // Load the first link of the queue
-    pqlink = *apqlink;
+    // Get the last link
+    pqlink = pqueue->pend;
+    pqlink->pnext = pnewqlink;
 
-    // Traverse the queue to get to the end
-    while ((pqlink = pqlink->pnext) != NULL) {
-        pqlink = pqlink->pnext;
-    }
+    // Make the new link, the last link
+    pqueue->pend = pnewqlink;
 
-    // pqlink now points to the last link
-    // Add a new link to the chain
-    pqlink->pnext = create_qlink(pitem);
+    // If the list is empty, make the new link the start of the queue as well
+    if (pqueue->cnt == 0) 
+        pqueue->pstart = pnewqlink;
+
+    pqueue->cnt++;
 }
 
 /**
- * Pops a qlink off the start of the queue
+ * Pops the pointer to the item on the list off the first link.
+ * The algorithm will take care of freeing used blocks for its own system
+ * The caller needs to take care of freeing the item itself
  */
-void *queue_pop(qlink **apqlink) {
+void *queue_popi(queue *pqueue) {
     void *pitem;
     qlink *pqlink;
 
-    if (*apqlink == NULL) return NULL;
+    // In case there are no links in the queue
+    if (pqueue->cnt ==0) return NULL;
 
     // Get the first link of the queue, and put it on the stack
-    pqlink = *apqlink;
+    pqlink = pqueue->pstart;
 
     // Make the next link the first link
-    *apqlink = pqlink->pnext;
+    pqueue->pstart = pqlink->pnext;
 
-    // Get the point to the item
+    // Get the pointer to the item
     pitem = pqlink->pitem;
 
     // Free the link on the stack
@@ -216,7 +226,5 @@ void *queue_pop(qlink **apqlink) {
     return pitem;
 }
 
-void queue_rm(qlink **apqlink) {
-}
 
 

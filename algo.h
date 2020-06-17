@@ -28,10 +28,19 @@ typedef struct qlink {
     struct qlink *pnext;
 } qlink;
 
+typedef struct queue {
+    qlink *pstart;
+    qlink *pend;
+    int cnt;
+} queue;
+
+
+
 static qlink *create_qlink(void *);
-void queue_pushi(qlink **, void*);
-void *queue_popi(qlink **);
-void queue_rm(qlink **);
+
+queue init_queue();
+void queue_pushi(queue *, void*);
+void *queue_popi(queue *);
 
 #endif
 

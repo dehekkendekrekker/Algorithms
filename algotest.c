@@ -3,7 +3,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "stresstest.h"
+#include "algotest.h"
 #include "algo.h"
 
 typedef struct sequence {
@@ -148,26 +148,24 @@ void program3(void) {
 
 void program4(void) {
     char buf[16];
-    char *leaf;
-    void **apleaf;
-    __be32 ip;
+    char *pbuf;
+    qlink *pqlink;
 
 
-
-
-    puts("Adds each IPv4 address to the binary tree. Then deletes them in 1 second intervals");
+    puts("Adds each IPv4 address to a queue. When all have been added, they are popped off the queue");
     while(1) {
         if (readln(buf) == 0) break;
-        
-        ip = inet_addr(buf);
 
-        apleaf = addbtbranch(&ipbintree, ip);
-        if (*apleaf == NULL) {
-            leaf = malloc(0); // Just some dummy allocation
-            *apleaf = leaf;
-        }
-        delbtbranch(&ipbintree, ip);
+        pbuf = malloc(16);
+        memcpy(pbuf, buf, 16);
+        printf("PUSH: %s\n", pbuf);
+        queue_pushi(&pqlink, pbuf);
     }
+
+    while ((pbuf = queue_popi(&pqlink)) != NULL) {
+        printf("POP: %s\n", pbuf);
+        free(pbuf);
+    }  
 
  
 }

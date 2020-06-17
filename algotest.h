@@ -1,5 +1,5 @@
-#ifndef _STRESSTEST_H
-#define _STRESSTEST_H
+#ifndef _ALGOTEST_H
+#define _ALGOTEST_H
 
 #include "algo.h"
 

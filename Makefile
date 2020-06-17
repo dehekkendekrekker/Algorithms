@@ -1,13 +1,13 @@
-all: stresstest
+all: algotest
 
-stresstest: algo.o stresstest.o
-	gcc -o stresstest algo.o stresstest.o
+algotest: algo.o algotest.o
+	gcc -o algotest algo.o algotest.o
 
 algo.o: algo.c algo.h
 	gcc -O -c algo.c algo.h
 
-stresstest.o: stresstest.c
-	gcc -O -c stresstest.c algo.h
+algotest.o: algotest.c
+	gcc -O -c algotest.c algo.h
 
 
 rndgen: rndgen.c
