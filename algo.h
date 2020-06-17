@@ -25,12 +25,13 @@ static void delbtnode(btnode *, int);
 
 typedef struct qlink {
     void *pitem;
-    *qlink next;
-}
+    struct qlink *pnext;
+} qlink;
 
-void queue_pushi(*qlink, void*);
-void *queue_popi(*qlink);
-void queue_rm(**qlink);
+static qlink *create_qlink(void *);
+void queue_pushi(qlink **, void*);
+void *queue_popi(qlink **);
+void queue_rm(qlink **);
 
 #endif
 

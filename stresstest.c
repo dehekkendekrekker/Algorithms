@@ -25,7 +25,6 @@ typedef struct ipbuffer {
 
 
 btnode *ipbintree = NULL; 
-stack *pstack = NULL;
 
 
 
@@ -154,8 +153,6 @@ void program4(void) {
     __be32 ip;
 
 
-    // Init the stack
-    init_stack(&pstack);
 
 
     puts("Adds each IPv4 address to the binary tree. Then deletes them in 1 second intervals");
@@ -172,7 +169,6 @@ void program4(void) {
         delbtbranch(&ipbintree, ip);
     }
 
-    destroy_stack(&pstack);
  
 }
 

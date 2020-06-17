@@ -1,7 +1,7 @@
 #ifndef _STRESSTEST_H
 #define _STRESSTEST_H
 
-#include "bintree.h"
+#include "algo.h"
 
 void addtsip(btnode **, __be32, __be32);
 

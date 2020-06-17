@@ -1,5 +1,9 @@
 #include <stdlib.h>
-#include "bintree.h"
+#include "algo.h"
+
+/************************************
+ * BINARY TREE IMPLEMENTATOIN
+ ************************************
 
 /**
  * Add a a sequence identified by an ip address to the binary tree
@@ -142,4 +146,77 @@ static void delbtnode(btnode *btnode, int depth) {
 free:
     free(btnode);
 }
+
+
+/**************************************
+ * QUEUE IMPLEMENTATION
+ *************************************/
+
+/**
+ * Creates a new qlink
+ */
+qlink *create_qlink(void *pitem) {
+    qlink *pqlink ;
+
+    pqlink = malloc(sizeof(qlink));
+    pqlink->pitem = pitem;
+    pqlink->pnext = NULL;
+
+    return pqlink;
+
+}
+
+/**
+ * Appends a qlink at the end of the queue
+ */
+void queue_push(qlink **apqlink, void *pitem) {
+    qlink *pqlink, *pnewqlink;     
+
+    // In case the queue is empty, add the first link
+    if (*apqlink == NULL) {
+        *apqlink = create_qlink(pitem);
+        return;
+    }
+
+    // Load the first link of the queue
+    pqlink = *apqlink;
+
+    // Traverse the queue to get to the end
+    while ((pqlink = pqlink->pnext) != NULL) {
+        pqlink = pqlink->pnext;
+    }
+
+    // pqlink now points to the last link
+    // Add a new link to the chain
+    pqlink->pnext = create_qlink(pitem);
+}
+
+/**
+ * Pops a qlink off the start of the queue
+ */
+void *queue_pop(qlink **apqlink) {
+    void *pitem;
+    qlink *pqlink;
+
+    if (*apqlink == NULL) return NULL;
+
+    // Get the first link of the queue, and put it on the stack
+    pqlink = *apqlink;
+
+    // Make the next link the first link
+    *apqlink = pqlink->pnext;
+
+    // Get the point to the item
+    pitem = pqlink->pitem;
+
+    // Free the link on the stack
+    free(pqlink);
+
+    // Return the pointer to the item
+    return pitem;
+}
+
+void queue_rm(qlink **apqlink) {
+}
+
 
