@@ -11,7 +11,7 @@
  * If you don't, a new leaf will be added to an already existing branch,
  * leaving the previously allocated block without a pointer
  */
-void addbtbranch(btnode **trunk, __be32 ip, void *pleaf) {
+void ** addbtbranch(btnode **trunk, __be32 ip) {
     char i;
     char bit;
     __be32 bitmask;
@@ -38,7 +38,7 @@ void addbtbranch(btnode **trunk, __be32 ip, void *pleaf) {
 
         // If it is null, determine wether to add a branch node or leaf node
         if (i == 0) { // Are we at the last branch node?
-            pbtnode->next[bit] = pleaf;
+            return &pbtnode->next[bit];
         } else {
             pbtnode->next[bit] = calloc(1, sizeof(btnode));
         }

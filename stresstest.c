@@ -68,6 +68,7 @@ void addtsip(btnode ** bintree, __be32 ts, __be32 ip) {
 void program1(void) {
     char buf[16];
     char *leaf;
+    void **apleaf;
     int counter = 0;
     __be32 ip;
 
@@ -80,7 +81,8 @@ void program1(void) {
 
         if (NULL == getbtbranch(bintree, ip)) {
             leaf = malloc(0);
-            addbtbranch(&bintree, ip, leaf);
+            apleaf = addbtbranch(&bintree, ip);
+            *apleaf = leaf;
         }
 
         counter++;
@@ -92,6 +94,7 @@ void program1(void) {
 void program2(void) {
     char buf[16];
     char *leaf;
+    void **apleaf;
     int counter = 0;
     __be32 ip;
 
@@ -103,7 +106,8 @@ void program2(void) {
 
         if (NULL == getbtbranch(bintree, ip)) {
             leaf = malloc(0);
-            addbtbranch(&bintree, ip, leaf);
+            apleaf = addbtbranch(&bintree, ip);
+            *apleaf = leaf;
             delbtbranch(&bintree, ip);
         }
 
@@ -118,6 +122,7 @@ void program3(void) {
     char *leaf;
     int counter = 0;
     __be32 ip;
+    void **apleaf;
 
     puts("Adds each IPv4 address to the binary tree as a whole. When done, deletes the whole tree");
     while(1) {
@@ -127,7 +132,9 @@ void program3(void) {
 
         if (NULL == getbtbranch(bintree, ip)) {
             leaf = malloc(0);
-            addbtbranch(&bintree, ip, leaf);
+            apleaf = addbtbranch(&bintree, ip);
+            *apleaf = leaf;
+
         }
 
         counter++;
@@ -139,6 +146,7 @@ void program3(void) {
 void program4(void) {
     char buf[16];
     char *leaf;
+    void **apleaf;
     __be32 ip;
 
 
@@ -150,7 +158,8 @@ void program4(void) {
 
         if (NULL == getbtbranch(bintree, ip)) {
             leaf = malloc(0); // Just some dummy allocation
-            addbtbranch(&bintree, ip, leaf);
+            apleaf = addbtbranch(&bintree, ip);
+            *apleaf = leaf;
         }
 
 

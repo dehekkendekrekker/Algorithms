@@ -7,7 +7,7 @@ typedef struct btnode {
     void *next[2];
 } btnode;
 
-void addbtbranch(btnode **, __be32, void *);
+void **addbtbranch(btnode **, __be32);
 
 void *getbtbranch(btnode *, __be32);
 
