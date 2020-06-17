@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "stresstest.h"
-#include "bintree.h"
+#include "algo.h"
 
 typedef struct sequence {
      char label[10];
@@ -24,11 +24,16 @@ typedef struct ipbuffer {
 } ipbuffer;
 
 
-btnode *bintree = NULL;
+btnode *ipbintree = NULL; 
+stack *pstack = NULL;
 
 
 
 void addtsip(btnode ** bintree, __be32 ts, __be32 ip) {
+    void **apleaf;
+
+    apleaf = addbtbranch(bintree, ts);
+
     
 }
 
@@ -79,9 +84,9 @@ void program1(void) {
         
         ip = inet_addr(buf);
 
-        if (NULL == getbtbranch(bintree, ip)) {
+        apleaf = addbtbranch(&ipbintree, ip);
+        if (*apleaf == NULL) {
             leaf = malloc(0);
-            apleaf = addbtbranch(&bintree, ip);
             *apleaf = leaf;
         }
 
@@ -104,12 +109,12 @@ void program2(void) {
         
         ip = inet_addr(buf);
 
-        if (NULL == getbtbranch(bintree, ip)) {
+        apleaf = addbtbranch(&ipbintree, ip);
+        if (*apleaf == NULL) {
             leaf = malloc(0);
-            apleaf = addbtbranch(&bintree, ip);
             *apleaf = leaf;
-            delbtbranch(&bintree, ip);
         }
+        delbtbranch(&ipbintree, ip);
 
         counter++;
     }
@@ -130,17 +135,16 @@ void program3(void) {
         
         ip = inet_addr(buf);
 
-        if (NULL == getbtbranch(bintree, ip)) {
+        apleaf = addbtbranch(&ipbintree, ip);
+        if (*apleaf == NULL) {
             leaf = malloc(0);
-            apleaf = addbtbranch(&bintree, ip);
             *apleaf = leaf;
-
         }
 
         counter++;
     }
 
-    delbtree(&bintree);
+    delbtree(&ipbintree);
 }
 
 void program4(void) {
@@ -150,22 +154,25 @@ void program4(void) {
     __be32 ip;
 
 
+    // Init the stack
+    init_stack(&pstack);
+
+
     puts("Adds each IPv4 address to the binary tree. Then deletes them in 1 second intervals");
     while(1) {
         if (readln(buf) == 0) break;
         
         ip = inet_addr(buf);
 
-        if (NULL == getbtbranch(bintree, ip)) {
+        apleaf = addbtbranch(&ipbintree, ip);
+        if (*apleaf == NULL) {
             leaf = malloc(0); // Just some dummy allocation
-            apleaf = addbtbranch(&bintree, ip);
             *apleaf = leaf;
         }
-
-
-
+        delbtbranch(&ipbintree, ip);
     }
 
+    destroy_stack(&pstack);
  
 }
 
@@ -193,7 +200,6 @@ int main(int argc, char *argv[]) {
         default:
             program1();
     }
-
 
     exit(1);
 }

@@ -7,9 +7,6 @@
  * This function will initialize a new binary at address pointed to
  * by trunk.
  *
- * NOTE. Make sure the sequence does not already exist within the tree
- * If you don't, a new leaf will be added to an already existing branch,
- * leaving the previously allocated block without a pointer
  */
 void ** addbtbranch(btnode **trunk, __be32 ip) {
     char i;
