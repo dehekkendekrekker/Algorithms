@@ -184,17 +184,28 @@ void queue_pushi(queue *pqueue, void *pitem) {
     // Create a new qlink
     pnewqlink = create_qlink(pitem);
 
+    // If the list is empty, make the new link the start of the queue as well
+    if (pqueue->cnt == 0) {
+        pqueue->pstart = pnewqlink;
+        pqueue->pend = pnewqlink;
+
+        goto inc_q_cnt;
+    }
+
     // Get the last link
     pqlink = pqueue->pend;
+
+    // Stick the new link after the last link
     pqlink->pnext = pnewqlink;
 
     // Make the new link, the last link
-    pqueue->pend = pnewqlink;
+    pqueue->pend = pqlink->pnext;
 
     // If the list is empty, make the new link the start of the queue as well
     if (pqueue->cnt == 0) 
         pqueue->pstart = pnewqlink;
 
+inc_q_cnt:
     pqueue->cnt++;
 }
 
@@ -208,7 +219,7 @@ void *queue_popi(queue *pqueue) {
     qlink *pqlink;
 
     // In case there are no links in the queue
-    if (pqueue->cnt ==0) return NULL;
+    if (pqueue->cnt == 0) return NULL;
 
     // Get the first link of the queue, and put it on the stack
     pqlink = pqueue->pstart;
@@ -222,6 +233,8 @@ void *queue_popi(queue *pqueue) {
     // Free the link on the stack
     free(pqlink);
 
+    // Decrease cnt;
+    pqueue->cnt--;
     // Return the pointer to the item
     return pitem;
 }

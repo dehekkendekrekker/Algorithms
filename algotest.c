@@ -149,8 +149,9 @@ void program3(void) {
 void program4(void) {
     char buf[16];
     char *pbuf;
-    qlink *pqlink;
+    queue ips;
 
+    ips = init_queue();
 
     puts("Adds each IPv4 address to a queue. When all have been added, they are popped off the queue");
     while(1) {
@@ -159,15 +160,15 @@ void program4(void) {
         pbuf = malloc(16);
         memcpy(pbuf, buf, 16);
         printf("PUSH: %s\n", pbuf);
-        queue_pushi(&pqlink, pbuf);
+        queue_pushi(&ips, pbuf);
     }
 
-    while ((pbuf = queue_popi(&pqlink)) != NULL) {
+    printf("Total items in queue: %i\n", ips.cnt);
+
+    while ((pbuf = queue_popi(&ips)) != NULL) {
         printf("POP: %s\n", pbuf);
         free(pbuf);
     }  
-
- 
 }
 
 
