@@ -3,6 +3,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <time.h>
 #include "algotest.h"
 #include "algo.h"
 
@@ -159,14 +160,14 @@ void program4(void) {
 
         pbuf = malloc(16);
         memcpy(pbuf, buf, 16);
-        printf("PUSH: %s\n", pbuf);
+  //      printf("PUSH: %s\n", pbuf);
         queue_pushi(&ips, pbuf);
     }
 
     printf("Total items in queue: %i\n", ips.cnt);
 
     while ((pbuf = queue_popi(&ips)) != NULL) {
-        printf("POP: %s\n", pbuf);
+//        printf("POP: %s\n", pbuf);
         free(pbuf);
     }  
 }
@@ -174,6 +175,12 @@ void program4(void) {
 
 int main(int argc, char *argv[]) {
     int choice;
+    struct timespec ts;
+    time_t starttime, endtime;
+
+    clock_gettime(CLOCK_REALTIME, &ts);
+    starttime = ts.tv_sec;
+    
 
     if (argc != 2) {
         choice = 1;
@@ -195,6 +202,11 @@ int main(int argc, char *argv[]) {
         default:
             program1();
     }
+
+    clock_gettime(CLOCK_REALTIME, &ts);
+    endtime = ts.tv_sec;
+
+    printf("Runtime: %i seconds\n", endtime-starttime);
 
     exit(1);
 }
