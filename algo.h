@@ -16,7 +16,7 @@ void **addbtbranch(btnode **, __be32);
 void *getbtbranch(btnode *, __be32);
 void delbtbranch(btnode **, __be32);
 void delbtree(btnode **);
-static void delbtnode(btnode *, int);
+void delbtnode(btnode *, int);
 
 
 /**
@@ -26,9 +26,11 @@ static void delbtnode(btnode *, int);
 typedef struct qlink {
     void *pitem;
     struct qlink *pnext;
+    struct qlink *pprev;
 } qlink;
 
 typedef struct queue {
+    qlink *pcur;
     qlink *pstart;
     qlink *pend;
     int cnt;
@@ -38,9 +40,12 @@ typedef struct queue {
 
 static qlink *create_qlink(void *);
 
-queue init_queue();
+queue init_queue(void);
 void queue_pushi(queue *, void*);
 void *queue_popi(queue *);
+void queue_rewind(queue *);
+qlink *queue_nexti(queue *);
+void queue_unlink(queue *, qlink *);
 
 #endif
 

@@ -1,5 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
+#if __has_include <linux/slab.h>
+    #include <linux/slab.h>
+    #define __CALLOC(a,b) kcalloc(a, b, GFP_KERNEL)
+    #define __FREE(a) kfree(a)
+#else
+    #include <stdlib.h>
+    #define __CALLOC(a,b) calloc(a, b)
+    #define __FREE(a) free(a)
+#endif
+
 #include "algo.h"
 
 /************************************
@@ -21,7 +29,7 @@ void ** addbtbranch(btnode **trunk, __be32 ip) {
 
     // Bintree initialisation
     if (*trunk == NULL) {
-        *trunk = calloc(1, sizeof(btnode));
+        *trunk = __CALLOC(1, sizeof(btnode));
     }
 
 
@@ -42,7 +50,7 @@ void ** addbtbranch(btnode **trunk, __be32 ip) {
         if (i == 0) { // Are we at the last branch node?
             return &pbtnode->next[bit];
         } else {
-            pbtnode->next[bit] = calloc(1, sizeof(btnode));
+            pbtnode->next[bit] = __CALLOC(1, sizeof(btnode));
         }
 
         pbtnode = pbtnode->next[bit];
@@ -80,8 +88,7 @@ void *getbtbranch(btnode *trunk, __be32 ip) {
 
 
 /**
- * Deletes a sequence
- * NOTE. Make sure the sequence exists in the tree before deleting.
+ * Deletes a branch from the binary tree. It does matter if the branch exists within the system.
  */
 void delbtbranch(btnode **aptrunk, __be32 ip) {
     char    i = 0;
@@ -93,21 +100,26 @@ void delbtbranch(btnode **aptrunk, __be32 ip) {
 
     void  **apbtnode = (void**)aptrunk;
 
+    // Return null if the tree is empty
+    if (*apbtnode == NULL) return;
+
     // Loop through all bits and through all nodes. Root to leaf
     for (i = 31; i >= 0; i--) {   // 32 cycles
-    //    printf("%i\n", i);
         apbtnodes[i] = apbtnode;   // Address of the pointer to the next  block
 
         bitmask = 1 << i;
         bit = (ip & bitmask) == bitmask;
+
+        // If the next node is net set, assume it has been deleted
+        if ((((btnode*)*apbtnode)->next[bit]) == NULL) return;
 
         apbtnode = &(((btnode*)*apbtnode)->next[bit]);
 
     }
 
     // abpnode now contains the address of the pointer to the sequence
-    // Free this up
-    free(*apbtnode);
+    // __FREE this up
+    __FREE(*apbtnode);
     *apbtnode = NULL;
 
     // Now loop through the list of addresses and pointers in reverse order
@@ -115,7 +127,7 @@ void delbtbranch(btnode **aptrunk, __be32 ip) {
     for (i = 0; i < 32; i++) {
         apbtnode = apbtnodes[i];
         if (((btnode*)*apbtnode)->next[0] == NULL && ((btnode*)*apbtnode)->next[1] == NULL) {
-            free(*apbtnode);
+            __FREE(*apbtnode);
             *apbtnode = NULL;
         }
     }
@@ -135,7 +147,7 @@ void delbtree(btnode **aptrunk) {
 /**
  * Deletes a node from a binary tree
  */
-static void delbtnode(btnode *btnode, int depth) {
+void delbtnode(btnode *btnode, int depth) {
     if (depth == 0) goto free;
 
     if (btnode->next[0] != NULL)
@@ -145,16 +157,17 @@ static void delbtnode(btnode *btnode, int depth) {
         delbtnode(btnode->next[1], depth - 1);
 
 free:
-    free(btnode);
+    __FREE(btnode);
 }
 
 
 /**************************************
- * QUEUE IMPLEMENTATION
+ * QUEUE IMPLEMENTATION (DOUBLY LINKED LIST)
  *************************************/
 
 queue init_queue() {
     queue q;
+    q.pcur = NULL;
     q.pstart = NULL;
     q.pend = NULL;
     q.cnt= 0;
@@ -168,9 +181,10 @@ queue init_queue() {
 qlink *create_qlink(void *pitem) {
     qlink *pqlink ;
 
-    pqlink = malloc(sizeof(qlink));
+    pqlink = __CALLOC(1, sizeof(qlink));
     pqlink->pitem = pitem;
     pqlink->pnext = NULL;
+    pqlink->pprev = NULL;
 
     return pqlink;
 }
@@ -197,13 +211,16 @@ void queue_pushi(queue *pqueue, void *pitem) {
 
     // Stick the new link after the last link
     pqlink->pnext = pnewqlink;
+    pnewqlink->pprev = pqlink;
 
     // Make the new link, the last link
     pqueue->pend = pqlink->pnext;
 
     // If the list is empty, make the new link the start of the queue as well
-    if (pqueue->cnt == 0) 
+    if (pqueue->cnt == 0) {
         pqueue->pstart = pnewqlink;
+        pqueue->pcur = pqueue->pstart;
+    }
 
 inc_q_cnt:
     pqueue->cnt++;
@@ -231,12 +248,101 @@ void *queue_popi(queue *pqueue) {
     pitem = pqlink->pitem;
 
     // Free the link on the stack
-    free(pqlink);
+    __FREE(pqlink);
 
     // Decrease cnt;
     pqueue->cnt--;
     // Return the pointer to the item
     return pitem;
+}
+
+/**
+ * Returns the next item in the queue
+ */
+qlink *queue_nexti(queue *pqueue){
+    qlink *pcur;
+
+    pcur = pqueue->pcur;
+
+    // This occurs when we've reached the end of the list
+    if (pcur == NULL) return NULL;
+
+    pqueue->pcur = pcur->pnext; // Set the internal pointer to the next link
+
+    return pcur;
+}
+
+/**
+ * Sets the internal pointer to the first link in the queue
+ */
+void queue_rewind(queue *pqueue) {
+    pqueue->pcur = pqueue->pstart;
+}
+
+/**
+ * Removes a link from the queue
+ */
+void queue_unlink(queue *pqueue, qlink *pqlink) {
+    qlink *pprev, *pnext;
+
+    // Failsafe
+    if (pqlink == NULL) return;
+
+
+    // There is only one item in the list that will be unlinked
+    //
+    if (pqlink == pqueue->pstart && pqlink == pqueue->pend) {
+        pqueue->pstart = NULL;
+        pqueue->pend   = NULL;
+        pqueue->pcur   = NULL;
+
+        goto queue_unlink_free; 
+    }
+
+    // If the to be deleted qlink is at the end
+    if (pqlink == pqueue->pend) {
+        // Make previous link the end of the chain.
+        pqueue->pend = pqlink->pprev;
+
+        // Erase the reference to the to be deleted qlink
+        pqlink->pprev->pnext = NULL;
+
+        // If the to be deleted qlink is the current, make the previous the current
+        if (pqueue->pcur == pqlink)
+            pqueue->pcur == pqlink->pprev;
+
+        goto queue_unlink_free;
+    }
+
+    // If the to be deleted link is at the start
+    if (pqlink == pqueue->pstart) {
+        // Make the next link the start of the chain
+        pqueue->pstart = pqlink->pnext;
+
+        // Erase the reference to the deleted link
+        pqlink->pnext->pprev = NULL;
+
+        // If the to be deleted qlink is the current, make the next the current
+        if (pqueue->pcur == pqlink)
+            pqueue->pcur == pqlink->pnext;
+
+        goto queue_unlink_free;
+    }
+
+    // The link is somewhere in the middle of the chain at this point
+    pqlink->pnext->pprev = pqlink->pprev;
+    pqlink->pprev->pnext = pqlink->pnext;
+    if (pqueue->pcur == pqlink);
+        pqueue->pcur = pqlink->pnext;
+
+
+    
+queue_unlink_free:
+    // Free the memory of the qlink
+    __FREE(pqlink);
+    pqueue->cnt--;
+
+    return;
 }
 
 

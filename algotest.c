@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <time.h>
-#include "algotest.h"
+#include <signal.h>
 #include "algo.h"
 
 typedef struct sequence {
@@ -19,23 +19,14 @@ sequence* init_seq() {
      return pseq;
 }
 
-typedef struct ipbuffer {
-    int size;
-    __be32 *ip[];
-} ipbuffer;
+typedef struct ts2ipbuffer {
+    long ts;
+    __be32 ip;
+} ts2ipbuf;
 
 
 btnode *ipbintree = NULL; 
-
-
-
-void addtsip(btnode ** bintree, __be32 ts, __be32 ip) {
-    void **apleaf;
-
-    apleaf = addbtbranch(bintree, ts);
-
-    
-}
+queue ipqueue;
 
 
 
@@ -173,6 +164,133 @@ void program4(void) {
 }
 
 
+void handle_alarm(int sig) {
+    ts2ipbuf *pts2ip;
+
+    printf("Time's up!\n");
+    
+    printf("Cleaning up %i items\n", ipqueue.cnt);
+    while ((pts2ip = queue_popi(&ipqueue)) != NULL) {
+        delbtbranch(&ipbintree, pts2ip->ip);
+        free(pts2ip);
+    }
+    puts("All done");
+    exit(1);
+}
+
+void program5(void) {
+    struct timespec ts;
+    char buf[16];
+    char *leaf;
+    int counter = 0;
+    __be32 ip;
+    void **apleaf;
+    ts2ipbuf *pts2ip;
+
+    puts("Inserts as many IP addresses and timestamps as it can in one second. Will the proceed to delete them all");
+
+    ipqueue = init_queue();
+    signal(SIGALRM, handle_alarm);
+    alarm(2);
+
+    while(1) {
+        if (readln(buf) == 0) break;
+
+        clock_gettime(CLOCK_REALTIME, &ts);
+       
+        // Get binary version of ip address
+        ip = inet_addr(buf);
+
+        // Create a timestamp 2 ip entry
+        pts2ip = malloc(sizeof(ts2ipbuf));
+        pts2ip->ip = ip;
+        pts2ip->ts = ts.tv_nsec;
+        
+        // Push the entry onto the queue;
+        queue_pushi(&ipqueue, pts2ip);
+
+        // Create a bintree branch for the ip address;
+        apleaf = addbtbranch(&ipbintree, ip);
+            if (*apleaf == NULL) {
+                leaf = malloc(0);
+                *apleaf = leaf;
+             }
+       
+
+        counter++;
+    }
+}
+
+
+void program6() {
+    queue testqueue;
+    qlink *qlink;
+    int i;
+    char *buf;
+
+    testqueue = init_queue();
+
+    puts("Inserting 10 items");
+    for (i =0; i < 3; i++) {
+        buf = calloc(10, sizeof(char));
+        sprintf(buf, "Hello %i", i);
+        queue_pushi(&testqueue, buf);
+    }
+
+    puts("Looping through list, displaying item");
+    queue_rewind(&testqueue);
+
+    while ((qlink = queue_nexti(&testqueue)) != NULL) {
+        printf("%s\n", qlink->pitem);
+    }
+
+    puts("Pick out Hello 1, and unlink it (middle)");
+    queue_rewind(&testqueue);
+    while ((qlink = queue_nexti(&testqueue)) != NULL) {
+        if (strcmp(qlink->pitem, "Hello 1") == 0) {
+            free(qlink->pitem);
+            queue_unlink(&testqueue, qlink);
+        }
+    }
+
+    puts("Pick out Hello 0, and unlink it (start)");
+    queue_rewind(&testqueue);
+    while ((qlink = queue_nexti(&testqueue)) != NULL) {
+        if (strcmp(qlink->pitem, "Hello 0") == 0) {
+            free(qlink->pitem);
+            queue_unlink(&testqueue, qlink);
+        }
+    }
+
+    puts("Pick out Hello 2, and unlink it (end)");
+    queue_rewind(&testqueue);
+    while ((qlink = queue_nexti(&testqueue)) != NULL) {
+        if (strcmp(qlink->pitem, "Hello 2") == 0) {
+            free(qlink->pitem);
+            queue_unlink(&testqueue, qlink);
+        }
+    }
+
+    puts("Verify ...");
+    queue_rewind(&testqueue);
+    while ((qlink = queue_nexti(&testqueue)) != NULL) {
+        printf("%s\n", qlink->pitem);
+    }
+
+
+    
+
+
+    
+
+
+
+
+
+
+}
+
+
 int main(int argc, char *argv[]) {
     int choice;
     struct timespec ts;
@@ -197,6 +315,12 @@ int main(int argc, char *argv[]) {
             break;
         case 4:
             program4();
+            break;
+        case 5:
+            program5();
+            break;
+        case 6:
+            program6();
             break;
         case 1:
         default:
